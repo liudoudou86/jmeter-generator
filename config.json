@@ -1,0 +1,6 @@
+{
+  "jmeter_version": "5.x",
+  "default_protocol": "HTTP",
+  "default_timeout_ms": 60000,
+  "listeners": ["SummaryReport", "ViewResultsTree"]
+}
