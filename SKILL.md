@@ -19,6 +19,32 @@ description: |
 
 ### 阶段一：收集接口信息
 
+入口分支判断：
+
+- **手动录入**（默认）：按下方 1-3 步骤逐条引导用户录入接口
+- **HAR 导入**：用户提供 `.har` 文件路径 → 调用 `har_parser.py` 自动解析
+
+**HAR 导入流程**：
+
+1. 用户提供 HAR 文件路径（或拖拽 HAR 文件到终端）
+2. 询问是否启用动态参数检测（默认开启）、认证提取（默认开启）
+3. 运行 `uv run python scripts/har_parser.py --har <file> --output <temp_config.json>`
+4. 展示解析摘要：
+
+   ```
+   📋 HAR 解析摘要
+   ━━━━━━━━━━━━━━━━━━━━━
+   HAR 版本: 1.2 | 条目数: 42
+   去重后接口: 15 个
+   动态参数检测: 时间戳(3处), UUID(1处)
+   认证变量: auth_token, auth_cookie
+   ━━━━━━━━━━━━━━━━━━━━━
+   ```
+
+5. 用户确认后，加载解析结果作为接口信息，进入阶段二
+
+**手动录入**（原有流程）：
+
 1. **引导用户录入接口**：询问 Method、URL、Headers、Body
 2. **组装数据结构**：将录入信息组装为 ApiInterface（见数据结构定义）
 3. **多接口支持**：用户可录入多个接口，按顺序编号
@@ -139,6 +165,15 @@ Body: {"username":"test","password":"123456"}
 | 未指定断言 | "需要检查哪些响应条件？如状态码、响应时间等" |
 | Method 非标准 | "`{method}` 不是标准 HTTP Method，已默认转为 GET，需要修改吗？" |
 
+### 新增配置：HarImportConfig
+
+| 字段 | 类型 | 必填 | 默认 | 说明 |
+|------|------|------|------|------|
+| har_path | String | 是 | - | HAR 文件路径 |
+| detect_dynamic | Boolean | 否 | true | 是否自动检测动态参数（时间戳/UUID） |
+| extract_auth | Boolean | 否 | true | 是否提取认证信息为变量 |
+| cookie_manager | Boolean | 否 | true | 是否自动添加 Cookie Manager |
+
 ## 数据模型
 
 ### ApiInterface
@@ -177,6 +212,8 @@ Body: {"username":"test","password":"123456"}
 | 测试场景描述 | → 阶段二：如果已有接口信息则生成脚本 |
 | 一体化的描述（含接口+场景） | → 阶段一+二：分别解析 |
 | "帮我写个压测脚本" | → 从零开始引导 |
+| HAR 文件路径 / `.har` 文件 | → 阶段一：进入 HAR 导入模式，自动解析 |
+| 拖拽 HAR 文件到终端 | → 阶段一：识别为 HAR 导入模式，自动解析 |
 
 ### 当前状态
 
@@ -189,6 +226,8 @@ Body: {"username":"test","password":"123456"}
 ## 如何使用脚本
 
 - **生成 JMeter 脚本**：运行 `uv run python scripts/jmx_builder.py --config <config.json> --output <script.jmx>`
+- **从 HAR 导入接口**：运行 `uv run python scripts/har_parser.py --har <session.har> --output <config.json>`
+- **HAR 导入后生成脚本**：`uv run python scripts/har_parser.py --har session.har --output temp.json && uv run python scripts/jmx_builder.py --config temp.json --output script.jmx`
 - **查看 JMX 模板**：读取 `references/jmeter_template.jmx`
 - **查看场景编写指南**：读取 `references/scenario_guide.md`
 - **查看示例**：读取 `examples/demo_basic.md`

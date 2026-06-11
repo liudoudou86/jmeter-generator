@@ -430,6 +430,20 @@ def build_user_defined_variables(variables):
     return el
 
 
+def build_cookie_manager():
+    el = ET.Element("CookieManager", {
+        "guiclass": "CookiePanel",
+        "testclass": "CookieManager",
+        "testname": "HTTP Cookie Manager",
+        "enabled": "true",
+    })
+    el.append(build_bool_prop("CookieManager.clearEachIteration", False))
+    el.append(build_bool_prop("CookieManager.controlledByThreadGroup", False))
+    el.append(build_string_prop("CookieManager.policy", "standard"))
+    el.append(build_string_prop("CookieManager.implementation", "HC4CookieHandler"))
+    return el
+
+
 def build_listeners():
     summary = ET.Element("ResultCollector", {
         "guiclass": "SummaryReport",
@@ -542,6 +556,11 @@ def build_script(config):
         if headers:
             hm = build_header_manager(headers)
             tg_hash.append(hm)
+            tg_hash.append(ET.Element("hashTree"))
+
+        if scenario.get("cookie_manager", False):
+            cm = build_cookie_manager()
+            tg_hash.append(cm)
             tg_hash.append(ET.Element("hashTree"))
 
         csv_data = scenario.get("csv_data")
